@@ -1,7 +1,7 @@
 # Alteryx SDK Snowflake Admin
 Custom Alteryx tool to run administrative DDL commands against a Snowflake Database.
 
-## Desctiption
+## Description
 This is an Alteryx tool to run arbitrary SQL commands against a Snowflake Database. This allows you to run administrative DDL commands such as:
 
 - ALTER <object>
