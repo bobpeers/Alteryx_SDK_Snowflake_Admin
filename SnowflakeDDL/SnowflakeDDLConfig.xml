@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<AlteryxJavaScriptPlugin>
+  <EngineSettings ToolFamily="Snowflake" EngineDll="Python" EngineDllEntryPoint="SnowflakeDDLEngine.py" SDKVersion="10.1" />
+  <GuiSettings Html="SnowflakeDDLGUI.html" Icon="SnowflakeDDLIcon.png" Help="https://github.com/bobpeers/Alteryx_SDK_Snowflake_Admin" SDKVersion="10.1">
+    <InputConnections>
+      <Connection Name="Input" AllowMultiple="False" Optional="False" Type="Connection" Label=""/>
+    </InputConnections>
+  </GuiSettings>
+  <Properties>
+    <MetaInfo>
+      <Name>Snowflake Administrator</Name>
+      <Description>Snowflake Administrator (v1.0)</Description>
+      <CategoryName>Connectors</CategoryName>
+      <SearchTags>snowflake, snow, database, saas, okta</SearchTags>
+      <ToolVersion>1.0</ToolVersion>
+      <Author>Bob Peers</Author>
+      <Company></Company>
+      <Copyright>2021</Copyright>
+    </MetaInfo>
+  </Properties>
+</AlteryxJavaScriptPlugin>
