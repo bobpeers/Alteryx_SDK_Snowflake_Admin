@@ -10,8 +10,11 @@ This is an Alteryx tool to run arbitrary SQL commands against a Snowflake Databa
 - DESCRIBE <object>
 - DROP <object>
 - SHOW <objects>
-- USE <object>
+- USE <object>\n\n
 
+
+<!-- end of the list -->
+  
 Full documentation on the DDL command can be found on [Snowflakes page](https://docs.snowflake.com/en/sql-reference/sql-ddl-summary.html).
 
 ## Installation
