@@ -15,7 +15,7 @@ This is an Alteryx tool to run arbitrary SQL commands against a Snowflake Databa
 Full documentation on the DDL command can be found on [Snowflakes page](https://docs.snowflake.com/en/sql-reference/sql-ddl-summary.html).
 
 ## Installation
-Download the yxi file and double click to install in Alteyrx.
+Download the yxi file and double click to install in Alteryx.
 
 <img src="https://user-images.githubusercontent.com/4363445/111472549-5c30a480-872a-11eb-906c-8512ea09d21e.png" width='500px' alt="Snowflake Admin Install Dialog">
 
