@@ -186,6 +186,7 @@ class IncomingInterface:
         self.field_list: list = []
         self.counter: int = 0
         self.timestamp: int = 0
+        self.fld_index: int = None
 
     def ii_init(self, record_info_in: object) -> bool:
         """
@@ -199,15 +200,11 @@ class IncomingInterface:
         if self.parent.alteryx_engine.get_init_var(self.parent.n_tool_id, 'UpdateOnly') == 'True' or not self.parent.is_initialized:
             return False
 
-        self.parent.display_info(f'Running Snowflake Output version {VERSION}')
+        self.parent.display_info(f'Running Snowflake DDL version {VERSION}')
         self.record_info_in = record_info_in  # For later reference.
 
-        # # Storing the field names to use when writing data out.
-        # for field in range(record_info_in.num_fields):
-        #     field_name = record_info_in[field].name
-        #     self.field_lists.append([field_name])
-
-        #     self.sql_list[field_name] = (str(record_info_in[field].type), record_info_in[field].size, record_info_in[field].scale)
+        # Storing the field index of the mapped path
+        self.fld_index = record_info_in.get_field_num(self.parent.ddl_command)
 
         self.timestamp = str(int(time.time()))
         self.parent.temp_dir = os.path.join(self.parent.temp_dir, self.timestamp)
@@ -228,36 +225,15 @@ class IncomingInterface:
         :return: False if file path string is invalid, otherwise True.
         """
 
-        self.counter += 1  # To keep track for chunking
-
         if not self.parent.is_initialized:
             return False
 
-        in_value = self.record_info_in[0].get_as_string(in_record)
+        in_value = self.record_info_in[self.fld_index].get_as_string(in_record)
         if in_value:
+            self.counter += 1
             self.field_list.append(in_value)
 
-        # # Storing the string data of in_record
-        # for field in range(self.record_info_in.num_fields):
-        #     in_value = self.record_info_in[field].get_as_string(in_record)
-        #     self.field_lists[field].append(in_value) if in_value is not None else self.field_lists[field].append('NULL')
-
-        # # Writing when chunk mark is met
-        # if self.counter % self.cache_size == 0:
-        #     self.parent.write_lists_to_csv(self.csv_file, self.field_lists)
-
-        #     # Start new csv file if limit reached
-        #     if self.counter % (self.file_size_limit) == 0:
-        #         self.file_counter += 1
-        #         # create new file name
-        #         self.csv_file = self.get_file_name(self.parent.temp_dir, self.parent.table, self.file_counter)
-
-        #         # append headers for new file
-        #         for record in range(0, len(self.headers)):
-        #             self.field_lists[record].append(self.headers[record])
-
         return True
-      
 
     def ii_update_progress(self, d_percent: float):
         """
@@ -280,30 +256,6 @@ class IncomingInterface:
             return False
 
         con: snowflake.connector.connection = None
-
-        # # Outputting the link message that the file was written
-        # if len(self.field_list) > 0 and self.parent.is_initialized:
-        #     # First element for each list will always be the field names.
-        #     if len(self.field_lists[0]) > 1:
-        #         self.parent.write_lists_to_csv(self.csv_file, self.field_lists)
-
-        # # gzip files
-        # files = [os.path.join(self.parent.temp_dir, f) for f in os.listdir(self.parent.temp_dir) if self.parent.table in f]
-
-        # #self.parent.gzip(self.csv_file)
-        # with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()*10) as executor:
-        #     executor.map(self.parent.gzip, files) 
-
-        # for f in files:
-        #     f = os.path.join(self.parent.temp_dir, f)
-        #     self.parent.display_file(f'{f} | {f} gzip file is created')
-
-        # # clean key field
-        # if self.parent.key:
-        #     self.parent.key = cleaner.reserved_words(self.parent.key, self.parent.case_sensitive)
-
-        # # path to gzip files
-        # gzip_file = os.path.join(self.parent.temp_dir, self.parent.table).replace('\\', '//')
 
         # Create Snowflake connection
 
@@ -336,48 +288,7 @@ class IncomingInterface:
             con.cursor().execute(f"USE WAREHOUSE {self.parent.warehouse}")
             con.cursor().execute(f"USE SCHEMA {self.parent.database}.{self.parent.schema}")
 
-            # # fix table name if case sensitive used or keyswords
-            # self.parent.table = cleaner.reserved_words(self.parent.table, self.parent.case_sensitive)
-        
-            # # Execute Table Creation #
-            # if self.parent.sql_type in ('create', 'update'):
-            #     if self.parent.sql_type == 'create':
-            #         table_sql: str = f"Create or Replace table {self.parent.table}  ({', '.join([self.parent.create_sql(k,v,s,c) for k, (v,s,c) in self.sql_list.items()])}"
-
-            #     elif self.parent.sql_type == 'update':
-            #         table_sql: str = f"Create or Replace TEMPORARY TABLE tmp  ({', '.join([self.parent.create_sql(k,v,s,c) for k, (v,s,c) in self.sql_list.items()])}"
-
-            #     table_sql += f', PRIMARY KEY ({self.parent.key}))' if self.parent.key else ')'
-
-            #     con.cursor().execute(table_sql)
-
-            # # PUT and COPY to Snowflake
-
-            # if self.parent.sql_type == 'truncate':
-            #     con.cursor().execute(f'truncate table {self.parent.table}')
-
-            # if self.parent.sql_type in ('create', 'truncate', 'append'):
-            #     con.cursor().execute("PUT 'file://{0}*' @%{1} PARALLEL=64 OVERWRITE=TRUE".format(gzip_file, self.parent.table))
-            #     con.cursor().execute("""COPY INTO {0} FILE_FORMAT = (TYPE=CSV FIELD_DELIMITER='|' NULL_IF='NULL' COMPRESSION=GZIP SKIP_HEADER=1 FIELD_OPTIONALLY_ENCLOSED_BY='"') PURGE = TRUE""".format(self.parent.table))
-
-            # elif self.parent.sql_type == 'update':
-            #     con.cursor().execute("PUT 'file://{0}*' @%tmp PARALLEL=64 OVERWRITE=TRUE".format(gzip_file))
-            #     con.cursor().execute("""COPY INTO tmp FILE_FORMAT = (TYPE=CSV FIELD_DELIMITER='|' NULL_IF='NULL' COMPRESSION=GZIP SKIP_HEADER=1 FIELD_OPTIONALLY_ENCLOSED_BY='"') PURGE = TRUE""")
-
-
-            #     insert_fields = ', '.join(self.sql_list)
-            #     set_fields = ', '.join([f + ' = tmp.' + f for f in self.sql_list])
-            #     tmp_fields = (', ').join(['tmp.' + fld for fld in self.sql_list])
-
-            #     merge_query = (f'merge into {self.parent.table} '
-            #                         f'using tmp on {self.parent.table}.{self.parent.key} = tmp.{self.parent.key} '
-            #                         f'when matched then '
-            #                         f'update set {set_fields} '
-            #                         f'when not matched then '
-            #                         f'insert ({insert_fields}) values ({tmp_fields});')
-
-            #     con.cursor().execute(merge_query)
-
+            # loop commands and execute
             for ddl in self.field_list:
                 con.cursor().execute(f'{ddl}')
                 self.parent.display_info(f'{ddl}')
@@ -392,18 +303,6 @@ class IncomingInterface:
             logging.error(str(e))
             self.parent.display_error_msg(f'Error {e.errno} ({e.sqlstate}): {e.msg} ({e.sfqid})')
         finally:
-
-            # delete temporary files if selected
-            # Get a list of all the file paths that ends with .txt from in specified directory
-            # if self.parent.delete_tempfiles:
-            #     fileList = glob.glob(f'{self.parent.temp_dir}/*.gz')
-            #     # Iterate over the list of filepaths & remove each file.
-            #     for filePath in fileList:
-            #         try:
-            #             self.parent.display_info(f'Removed temp file {filePath}')
-            #             os.remove(filePath)
-            #         except:
-            #             self.parent.display_info(f'Unable to remove temp file {filePath}')
 
             if con:
                 con.close()

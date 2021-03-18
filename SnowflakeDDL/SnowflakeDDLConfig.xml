@@ -9,10 +9,10 @@
   <Properties>
     <MetaInfo>
       <Name>Snowflake Administrator</Name>
-      <Description>Snowflake Administrator (v1.0)</Description>
+      <Description>Snowflake Administrator (v1.1)</Description>
       <CategoryName>Connectors</CategoryName>
       <SearchTags>snowflake, snow, database, saas, okta</SearchTags>
-      <ToolVersion>1.0</ToolVersion>
+      <ToolVersion>1.1</ToolVersion>
       <Author>Bob Peers</Author>
       <Company></Company>
       <Copyright>2021</Copyright>
